@@ -9,7 +9,7 @@ describe Robot do
   describe '#heal!' do
 
     it "should return an error string if health is 0 or less" do
-      @robot.wound(100)
+      @robot.wound(200)
       expect{@robot.heal!(10)}.to raise_error(Robot::RobotAlreadyDeadError)
     end
 

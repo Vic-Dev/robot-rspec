@@ -6,6 +6,7 @@ require_relative 'weapon'
 require_relative 'box_of_bolts'
 require_relative 'laser'
 require_relative 'plasma_cannon'
+require_relative 'battery'
 
 class Robot
 
@@ -17,8 +18,10 @@ class Robot
 
   MAX_WEIGHT = 250
 
-  attr_reader :position, :items, :health, :hitpoints
-  attr_accessor :equipped_weapon
+  @@list = []
+
+  attr_reader :position, :items, :hitpoints
+  attr_accessor :equipped_weapon, :health, :shield_points
 
   def initialize
     @position = [0,0]
@@ -26,6 +29,8 @@ class Robot
     @health = 100
     @hitpoints = 5
     @equipped_weapon = nil
+    @shield_points = 50
+    @@list << self
   end
 
   def move_left
@@ -46,9 +51,8 @@ class Robot
 
   def pick_up(item)
     return if item.weight + items_weight > MAX_WEIGHT
-    if item.is_a? Weapon
-      @equipped_weapon = item
-    elsif item.is_a? BoxOfBolts
+    @equipped_weapon = item if item.is_a? Weapon
+    if item.is_a? BoxOfBolts
       item.feed(self) unless health > 80
     end
     @items << item
@@ -68,8 +72,22 @@ class Robot
   end
 
   def wound(amount)
-    @health -= amount
-    @health = 0 if @health < 0
+    if amount > @shield_points
+      amount -= @shield_points
+      @shield_points = 0
+      @health -= amount
+      @health = 0 if @health < 0
+    elsif amount <= @shield_points
+      @shield_points -= amount
+    end
+  end
+
+  def recharge
+    battery = items.detect {|x| x.is_a? Battery} 
+    if battery
+      @items.delete(battery)
+      @shield_points += 25
+    end
   end
 
   def heal(amount)
@@ -114,6 +132,10 @@ class Robot
     else
       raise UnattackableEnemy, "Can only attack a robot!"
     end
+  end
+
+  def self.all_positions
+    @@list.map { |robot| robot.position }
   end
 
 end
