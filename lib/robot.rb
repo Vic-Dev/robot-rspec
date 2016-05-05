@@ -48,6 +48,8 @@ class Robot
     return if item.weight + items_weight > MAX_WEIGHT
     if item.is_a? Weapon
       @equipped_weapon = item
+    elsif item.is_a? BoxOfBolts
+      item.feed(self) unless health > 80
     end
     @items << item
   end
@@ -66,26 +68,35 @@ class Robot
   end
 
   def wound(amount)
-    if @health - amount < 0
-      @health = 0
-    else
-      @health -= amount
-    end
+    @health -= amount
+    @health = 0 if @health < 0
   end
 
   def heal(amount)
-    if @health + amount > 100
-      @health = 100
-    else
-      @health += amount
-    end
+    @health += amount
+    @health = 100 if @health > 100
+  end
+
+  def position_compare_x(enemy)
+    x = (enemy.position[0] - @position[0]).abs
+  end
+
+  def position_compare_y(enemy)
+    y = (enemy.position[1] - @position[1]).abs
   end
 
   def attack(enemy)
-    if equipped_weapon.nil?
-      enemy.wound(@hitpoints)
-    else
+    x = position_compare_x(enemy)
+    y = position_compare_y(enemy)
+    if x <= 1 && y <= 1
+      if equipped_weapon.nil?
+        enemy.wound(@hitpoints)
+      else
+        equipped_weapon.hit(enemy)
+      end
+    elsif (x <= 2) && (y <= 2) && (equipped_weapon.is_a? Grenade)
       equipped_weapon.hit(enemy)
+      @equipped_weapon = nil
     end
   end
 
