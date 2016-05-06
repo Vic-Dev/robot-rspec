@@ -20,10 +20,11 @@ class Robot
 
   @@list = []
 
-  attr_reader :position, :items, :hitpoints
+  attr_reader :position, :items, :hitpoints, :name
   attr_accessor :equipped_weapon, :health, :shield_points
 
-  def initialize
+  def initialize(name)
+    @name = name
     @position = [0,0]
     @items = []
     @health = 100
@@ -134,8 +135,31 @@ class Robot
     end
   end
 
-  def self.all_positions
-    @@list.map { |robot| robot.position }
+  def self.all_in_position(x, y)
+    @@list.select do |robot| 
+      if robot.position[0] == x && robot.position[1] == y
+        robot
+      end
+    end
+  end
+
+  def scanner
+    array = []
+    range_x = (position[0]-1..position[0]+1)
+    range_y = (position[1]-1..position[1]+1)
+    range_x.each do |x|
+      range_y.each do |y|
+        # Another way to remove self from array returned by scanner
+        # if position[0] == x && position[1] == y
+        #   break
+        # end
+        robots = self.class.all_in_position(x, y)
+        array.concat robots unless robots.nil? || robots.empty?
+      end
+    end
+    # Remove self from array returned by scanner
+    array.delete_if {|robot| robot == self}
+    array
   end
 
 end
